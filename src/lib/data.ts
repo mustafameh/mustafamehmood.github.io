@@ -8,7 +8,7 @@ export const siteConfig = {
   phone: "+44 7769 504 569",
   linkedin: "https://www.linkedin.com/in/mustafa-meh",
   github: "https://github.com/mustafameh",
-  location: "London, UK · Open to Relocate",
+  location: "",
 };
 
 export interface Experience {

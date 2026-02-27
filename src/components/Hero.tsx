@@ -261,14 +261,16 @@ export function Hero() {
           {siteConfig.tagline}
         </motion.p>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-xs sm:text-sm text-text-muted font-mono"
-        >
-          {siteConfig.location}
-        </motion.p>
+        {siteConfig.location && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-xs sm:text-sm text-text-muted font-mono"
+          >
+            {siteConfig.location}
+          </motion.p>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}
