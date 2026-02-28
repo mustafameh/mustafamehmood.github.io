@@ -52,6 +52,30 @@ export default function Chatbot() {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handler = () => setIsOpen(true);
+    window.addEventListener("open-chatbot", handler);
+    return () => window.removeEventListener("open-chatbot", handler);
+  }, []);
+
+  const chatRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (
+        chatRef.current && !chatRef.current.contains(target) &&
+        buttonRef.current && !buttonRef.current.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
   async function sendMessage() {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
@@ -162,6 +186,7 @@ export default function Chatbot() {
     <>
       {/* Floating action button */}
       <motion.button
+        ref={buttonRef}
         onClick={() => setIsOpen((o) => !o)}
         className="fixed bottom-6 right-6 z-50 w-12 h-12 text-white flex items-center justify-center transition-all bg-transparent"
         whileHover={{ scale: 1.12 }}
@@ -208,6 +233,7 @@ export default function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
+            ref={chatRef}
             className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-2xl flex flex-col overflow-hidden"
             style={{
               background: "#06060f",
@@ -314,7 +340,7 @@ export default function Chatbot() {
                             </div>
                           )}
                           <div
-                            className="rounded-xl rounded-tl-sm px-3 py-2 prose prose-invert prose-sm max-w-none [&_p]:my-1 [&_ul]:my-1 [&_li]:my-0"
+                            className="rounded-xl rounded-tl-sm px-3 py-2 max-w-none text-sm text-white/70 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_ul]:list-disc [&_li]:my-0.5 [&_strong]:text-white/85 [&_a]:text-primary-light [&_a]:underline"
                             style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
                           >
                             <ReactMarkdown>{msg.content}</ReactMarkdown>

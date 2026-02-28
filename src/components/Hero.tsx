@@ -278,6 +278,17 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.6 }}
           className="mt-10 flex flex-wrap justify-center gap-4 sm:gap-6"
         >
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
+            className="text-sm text-text-secondary hover:text-foreground transition-colors flex items-center gap-2 cursor-pointer"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z" fill="currentColor" />
+              <path d="M19 14l.75 2.25L22 17l-2.25.75L19 20l-.75-2.25L16 17l2.25-.75z" fill="currentColor" opacity="0.6" />
+              <path d="M5 16l.5 1.5L7 18l-1.5.5L5 20l-.5-1.5L3 18l1.5-.5z" fill="currentColor" opacity="0.4" />
+            </svg>
+            Chat with mustafa.ai
+          </button>
           <a
             href={siteConfig.linkedin}
             target="_blank"
@@ -377,6 +388,23 @@ export function Hero() {
                     <div className="text-xs text-text-muted">{siteConfig.phone}</div>
                   </div>
                 </a>
+                <button
+                  onClick={() => {
+                    setContactOpen(false);
+                    setTimeout(() => window.dispatchEvent(new CustomEvent("open-chatbot")), 200);
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-surface-elevated hover:border-primary/30 transition-colors w-full text-left cursor-pointer"
+                >
+                  <svg className="w-5 h-5 text-primary-light shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z" fill="currentColor" />
+                    <path d="M19 14l.75 2.25L22 17l-2.25.75L19 20l-.75-2.25L16 17l2.25-.75z" fill="currentColor" opacity="0.6" />
+                    <path d="M5 16l.5 1.5L7 18l-1.5.5L5 20l-.5-1.5L3 18l1.5-.5z" fill="currentColor" opacity="0.4" />
+                  </svg>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">Chat with mustafa.ai</div>
+                    <div className="text-xs text-text-muted">AI portfolio assistant</div>
+                  </div>
+                </button>
                 <a
                   href={siteConfig.github}
                   target="_blank"
