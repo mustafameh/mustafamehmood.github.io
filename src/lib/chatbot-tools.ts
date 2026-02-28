@@ -125,9 +125,8 @@ async function sendMessage(args: ToolArgs): Promise<string> {
   const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Europe/London" });
 
   const resend = new Resend(apiKey);
-
-  const { error } = await resend.emails.send({
-    from: "mustafa.ai <onboarding@resend.dev>",
+  const payload = {
+    from: "mustafa.ai <onboarding@resend.dev>" as const,
     to: siteConfig.email,
     replyTo: senderEmail || undefined,
     subject: `New message from ${senderName} via mustafa.ai`,
@@ -146,14 +145,33 @@ async function sendMessage(args: ToolArgs): Promise<string> {
         </table>
       </div>
     `,
-  });
+  };
 
-  if (error) {
-    console.error("Resend error:", error);
-    return JSON.stringify({ success: false, error: "Failed to send message. Please try again." });
+  const maxAttempts = 2;
+  let lastError: { message?: string } | null = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const { error } = await resend.emails.send(payload);
+    if (!error) {
+      return JSON.stringify({ success: true, message: "Message delivered successfully." });
+    }
+    lastError = error;
+    const isNetworkError =
+      typeof error?.message === "string" &&
+      (error.message.includes("could not be resolved") || error.message.includes("fetch") || error.message.includes("network"));
+    if (attempt < maxAttempts && isNetworkError) {
+      await new Promise((r) => setTimeout(r, 1500));
+      continue;
+    }
+    break;
   }
 
-  return JSON.stringify({ success: true, message: "Message delivered successfully." });
+  console.error("Resend error:", lastError);
+  const msg =
+    lastError && typeof lastError?.message === "string" && lastError.message.length > 0
+      ? lastError.message
+      : "Failed to send message. Please try again.";
+  return JSON.stringify({ success: false, error: msg });
 }
 
 const syncToolRegistry: Record<string, (args: ToolArgs) => string> = {
