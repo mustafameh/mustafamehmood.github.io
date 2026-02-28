@@ -11,6 +11,8 @@ import {
 
 type ToolArgs = Record<string, string | undefined>;
 
+export type ConversationMessage = { role: "user" | "assistant"; content: string };
+
 function getProfile(): string {
   return JSON.stringify({
     name: siteConfig.name,
@@ -109,7 +111,28 @@ function getContact(): string {
   });
 }
 
-async function sendMessage(args: ToolArgs): Promise<string> {
+const MAX_TRANSCRIPT_MESSAGES = 10;
+
+function escapeHtml(s: string): string {
+  return s.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formatTranscript(messages: ConversationMessage[]): string {
+  const take = messages.slice(-MAX_TRANSCRIPT_MESSAGES);
+  return take
+    .map((m) => {
+      const label = m.role === "user" ? "Visitor" : "Assistant";
+      const snippet = escapeHtml(m.content.slice(0, 500)) + (m.content.length > 500 ? "…" : "");
+      return `<tr><td style="padding: 6px 0; vertical-align: top; font-size: 12px; color: #64748b;">${label}</td><td style="padding: 6px 0 6px 12px; font-size: 13px; color: #334155; border-left: 2px solid #e2e8f0;">${snippet}</td></tr>`;
+    })
+    .join("");
+}
+
+async function sendMessage(
+  args: ToolArgs,
+  context?: { conversation?: ConversationMessage[] }
+): Promise<string> {
+  const conversation = context?.conversation;
   const message = args.message;
   if (!message || message.trim().length === 0) {
     return JSON.stringify({ success: false, error: "Message cannot be empty." });
@@ -124,6 +147,16 @@ async function sendMessage(args: ToolArgs): Promise<string> {
   const senderEmail = args.sender_email?.trim();
   const timestamp = new Date().toLocaleString("en-GB", { timeZone: "Europe/London" });
 
+  const transcriptSection =
+    conversation && conversation.length > 0
+      ? `
+        <h3 style="color: #1a1a2e; font-size: 14px; margin: 20px 0 8px 0;">Recent conversation</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px;">
+          ${formatTranscript(conversation)}
+        </table>
+      `
+      : "";
+
   const resend = new Resend(apiKey);
   const payload = {
     from: "mustafa.ai <onboarding@resend.dev>" as const,
@@ -136,11 +169,12 @@ async function sendMessage(args: ToolArgs): Promise<string> {
           New Message via mustafa.ai
         </h2>
         <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin: 16px 0;">
-          <p style="color: #334155; white-space: pre-wrap; line-height: 1.6; margin: 0;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          <p style="color: #334155; white-space: pre-wrap; line-height: 1.6; margin: 0;">${escapeHtml(message)}</p>
         </div>
+        ${transcriptSection}
         <table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; color: #64748b;">
-          <tr><td style="padding: 4px 0;"><strong>From:</strong></td><td>${senderName.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td></tr>
-          ${senderEmail ? `<tr><td style="padding: 4px 0;"><strong>Email:</strong></td><td><a href="mailto:${senderEmail}">${senderEmail}</a></td></tr>` : ""}
+          <tr><td style="padding: 4px 0;"><strong>From:</strong></td><td>${escapeHtml(senderName)}</td></tr>
+          ${senderEmail ? `<tr><td style="padding: 4px 0;"><strong>Email:</strong></td><td><a href="mailto:${escapeHtml(senderEmail)}">${escapeHtml(senderEmail)}</a></td></tr>` : ""}
           <tr><td style="padding: 4px 0;"><strong>Time:</strong></td><td>${timestamp}</td></tr>
         </table>
       </div>
@@ -184,16 +218,25 @@ const syncToolRegistry: Record<string, (args: ToolArgs) => string> = {
   get_contact: getContact,
 };
 
-const asyncToolRegistry: Record<string, (args: ToolArgs) => Promise<string>> = {
+const asyncToolRegistry: Record<
+  string,
+  (args: ToolArgs, context?: { conversation?: ConversationMessage[] }) => Promise<string>
+> = {
   send_message: sendMessage,
 };
 
-export async function executeTool(name: string, args: ToolArgs): Promise<string | null> {
+export type ExecuteToolContext = { conversation?: ConversationMessage[] };
+
+export async function executeTool(
+  name: string,
+  args: ToolArgs,
+  context?: ExecuteToolContext
+): Promise<string | null> {
   const syncFn = syncToolRegistry[name];
   if (syncFn) return syncFn(args);
 
   const asyncFn = asyncToolRegistry[name];
-  if (asyncFn) return asyncFn(args);
+  if (asyncFn) return asyncFn(args, context);
 
   return null;
 }

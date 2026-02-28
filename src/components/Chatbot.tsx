@@ -17,7 +17,7 @@ interface StreamEvent {
 }
 
 const GREETING =
-  "Hi! I'm Mustafa's AI assistant. Ask me about his experience, projects, and skills — or say you'd like to send him a message and I'll pass it along.";
+  "Hi! I'm Mustafa's AI assistant. Ask me about his experience, projects, and skills — or I can email a message to him for you.";
 
 function AiStarsIcon({ size = 12, className = "" }: { size?: number; className?: string }) {
   return (

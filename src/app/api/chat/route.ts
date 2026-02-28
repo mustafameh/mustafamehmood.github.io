@@ -48,6 +48,27 @@ setInterval(() => {
   }
 }, 120_000);
 
+// ---------- Global LLM call limit (in-memory, per-instance) ----------
+
+const globalLlmBucket = { count: 0, resetAt: Date.now() + 3_600_000 };
+const MAX_LLM_CALLS_PER_HOUR = 50;
+
+function isGlobalLlmLimitReached(): boolean {
+  const now = Date.now();
+  if (now > globalLlmBucket.resetAt) {
+    globalLlmBucket.count = 1;
+    globalLlmBucket.resetAt = now + 3_600_000;
+    return false;
+  }
+  globalLlmBucket.count++;
+  return globalLlmBucket.count > MAX_LLM_CALLS_PER_HOUR;
+}
+
+// ---------- Limits ----------
+
+const MAX_BODY_SIZE = 100_000; // 100 KB
+const MAX_HISTORY_MSG_LENGTH = 500;
+
 // ---------- Helpers ----------
 
 function encode(obj: Record<string, unknown>): Uint8Array {
@@ -82,10 +103,34 @@ export async function POST(request: Request) {
     );
   }
 
+  if (isGlobalLlmLimitReached()) {
+    return Response.json(
+      { error: "The assistant is currently busy. Please try again later." },
+      { status: 429 }
+    );
+  }
+
+  // --- Body size guard ---
+  const contentLength = request.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+    return Response.json({ error: "Request too large." }, { status: 413 });
+  }
+
   // --- Parse & validate body ---
+  let rawText: string;
+  try {
+    rawText = await request.text();
+  } catch {
+    return Response.json({ error: "Could not read request." }, { status: 400 });
+  }
+
+  if (rawText.length > MAX_BODY_SIZE) {
+    return Response.json({ error: "Request too large." }, { status: 413 });
+  }
+
   let body: { message: string; history: ChatMessage[] };
   try {
-    body = await request.json();
+    body = JSON.parse(rawText);
   } catch {
     return Response.json({ error: "Invalid JSON." }, { status: 400 });
   }
@@ -104,7 +149,18 @@ export async function POST(request: Request) {
   }
 
   const safeHistory = Array.isArray(history)
-    ? history.slice(-config.limits.max_history_length)
+    ? history
+        .slice(-config.limits.max_history_length)
+        .filter(
+          (m): m is ChatMessage =>
+            m != null &&
+            typeof m.content === "string" &&
+            (m.role === "user" || m.role === "assistant")
+        )
+        .map((m) => ({
+          ...m,
+          content: m.content.slice(0, MAX_HISTORY_MSG_LENGTH),
+        }))
     : [];
 
   // --- Initialize Gemini ---
@@ -164,7 +220,12 @@ export async function POST(request: Request) {
             if (name === "send_message" && isMessageRateLimited(ip)) {
               result = '{"success": false, "error": "Message limit reached. Please try again later."}';
             } else if (isValidTool(name)) {
-              result = (await executeTool(name, args ?? {})) ?? '{"error": "No data found."}';
+              const conversation =
+                name === "send_message"
+                  ? [...safeHistory, { role: "user" as const, content: message }]
+                  : undefined;
+              result =
+                (await executeTool(name, args ?? {}, { conversation })) ?? '{"error": "No data found."}';
             } else {
               result = '{"error": "Unknown tool."}';
             }
