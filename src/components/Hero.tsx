@@ -275,8 +275,8 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-10 flex flex-wrap justify-center gap-4 sm:gap-6"
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="mt-6 flex justify-center"
         >
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("open-chatbot"))}
@@ -289,6 +289,13 @@ export function Hero() {
             </svg>
             Chat with mustafa.ai
           </button>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="mt-4 flex flex-wrap justify-center gap-4 sm:gap-6"
+        >
           <a
             href={siteConfig.linkedin}
             target="_blank"

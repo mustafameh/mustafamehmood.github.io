@@ -19,11 +19,32 @@ function isRateLimited(ip: string, maxPerMinute: number): boolean {
   return bucket.count > maxPerMinute;
 }
 
-// Periodic cleanup so the map doesn't grow forever
+// ---------- Message send rate limiter (per-IP, 3/hour) ----------
+
+const messageBuckets = new Map<string, { count: number; resetAt: number }>();
+const MAX_MESSAGES_PER_HOUR = 3;
+
+function isMessageRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const bucket = messageBuckets.get(ip);
+
+  if (!bucket || now > bucket.resetAt) {
+    messageBuckets.set(ip, { count: 1, resetAt: now + 3_600_000 });
+    return false;
+  }
+
+  bucket.count++;
+  return bucket.count > MAX_MESSAGES_PER_HOUR;
+}
+
+// Periodic cleanup so the maps don't grow forever
 setInterval(() => {
   const now = Date.now();
   for (const [ip, bucket] of rateBuckets) {
     if (now > bucket.resetAt) rateBuckets.delete(ip);
+  }
+  for (const [ip, bucket] of messageBuckets) {
+    if (now > bucket.resetAt) messageBuckets.delete(ip);
   }
 }, 120_000);
 
@@ -140,8 +161,10 @@ export async function POST(request: Request) {
 
             // Execute tool
             let result: string;
-            if (isValidTool(name)) {
-              result = executeTool(name, args ?? {}) ?? '{"error": "No data found."}';
+            if (name === "send_message" && isMessageRateLimited(ip)) {
+              result = '{"success": false, "error": "Message limit reached. Please try again later."}';
+            } else if (isValidTool(name)) {
+              result = (await executeTool(name, args ?? {})) ?? '{"error": "No data found."}';
             } else {
               result = '{"error": "Unknown tool."}';
             }
