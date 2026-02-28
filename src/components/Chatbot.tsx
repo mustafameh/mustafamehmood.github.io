@@ -58,19 +58,12 @@ export default function Chatbot() {
     return () => window.removeEventListener("open-chatbot", handler);
   }, []);
 
-  const chatRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
   useEffect(() => {
     if (!isOpen) return;
     function handleClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        chatRef.current && !chatRef.current.contains(target) &&
-        buttonRef.current && !buttonRef.current.contains(target)
-      ) {
-        setIsOpen(false);
-      }
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-chatbot]")) return;
+      setIsOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -186,7 +179,7 @@ export default function Chatbot() {
     <>
       {/* Floating action button */}
       <motion.button
-        ref={buttonRef}
+        data-chatbot
         onClick={() => setIsOpen((o) => !o)}
         className="fixed bottom-6 right-6 z-50 w-12 h-12 text-white flex items-center justify-center transition-all bg-transparent"
         whileHover={{ scale: 1.12 }}
@@ -233,7 +226,7 @@ export default function Chatbot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            ref={chatRef}
+            data-chatbot
             className="fixed bottom-24 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-2xl flex flex-col overflow-hidden"
             style={{
               background: "#06060f",
