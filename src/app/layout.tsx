@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Chatbot from "@/components/Chatbot";
 
 const dmSans = DM_Sans({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({
         className={`${dmSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
         {children}
+        <Chatbot />
       </body>
     </html>
   );
