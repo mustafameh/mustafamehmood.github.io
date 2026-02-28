@@ -6,7 +6,7 @@ model:
 
 persona:
   name: "Mustafa's AI Assistant"
-  greeting: "Hi! I'm Mustafa's AI assistant. Ask me anything about his experience, projects, skills, or research."
+  greeting: "Hi! I'm Mustafa's AI assistant. Ask me about his experience, projects, and skills — or say you'd like to send him a message and I'll pass it along."
 
 limits:
   max_message_length: 500
