@@ -295,11 +295,7 @@ export function Hero() {
             rel="noopener noreferrer"
             className="text-sm text-text-secondary hover:text-foreground transition-colors flex items-center gap-2"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
-              <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" strokeWidth="2" />
-              <path d="M15 15l5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <path d="M10.5 7.5c-1.66 0-3 1.34-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-            </svg>
+            <img src="/sherlock-logo.png" alt="Agent Sherlock" className="w-5 h-5 rounded-full object-contain" />
             Chat with Agent Sherlock
           </a>
         </motion.div>
@@ -431,11 +427,7 @@ export function Hero() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 p-3 rounded-lg border border-border bg-surface-elevated hover:border-primary/30 transition-colors"
                 >
-                  <svg className="w-5 h-5 text-primary-light shrink-0" viewBox="0 0 24 24" fill="none">
-                    <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" strokeWidth="2" />
-                    <path d="M15 15l5.5 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <path d="M10.5 7.5c-1.66 0-3 1.34-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-                  </svg>
+                  <img src="/sherlock-logo.png" alt="Agent Sherlock" className="w-5 h-5 shrink-0 rounded-full object-contain" />
                   <div className="min-w-0">
                     <div className="text-sm font-medium">Chat with Agent Sherlock</div>
                     <div className="text-xs text-text-muted">ReAct AI detective chatbot</div>
