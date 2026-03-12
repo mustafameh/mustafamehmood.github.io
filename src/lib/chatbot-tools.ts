@@ -208,6 +208,84 @@ async function sendMessage(
   return JSON.stringify({ success: false, error: msg });
 }
 
+// ---------- Resume fetcher (cached) ----------
+
+const RESUME_RAW_URL =
+  "https://raw.githubusercontent.com/mustafameh/Resume/main/main.tex";
+const RESUME_PDF_URL =
+  "https://raw.githubusercontent.com/mustafameh/Resume/main/resume.pdf";
+const RESUME_CACHE_MS = 5 * 60 * 1000;
+
+let resumeCache: { text: string; fetchedAt: number } | null = null;
+
+function stripLatex(tex: string): string {
+  let text = tex.replace(/[\s\S]*?\\begin\{document\}/, "");
+  text = text.replace(/\\end\{document\}[\s\S]*/, "");
+
+  text = text.replace(/\\href\{[^}]*\}\{([^}]*)\}/g, "$1");
+  text = text.replace(/\\hrefWithoutArrow\{[^}]*\}\{[^}]*\{([^}]*)\}\}/g, "$1");
+  text = text.replace(/\\textbf\{([^}]*)\}/g, "$1");
+  text = text.replace(/\\textit\{([^}]*)\}/g, "$1");
+  text = text.replace(/\\mbox\{[^}]*\{([^}]*)\}\}/g, "$1");
+  text = text.replace(/\\fontsize\{[^}]*\}\{[^}]*\}\\selectfont/g, "");
+  text = text.replace(/\\(vspace|hspace|hfill|noindent|normalsize|raggedleft|centering)\b[^a-zA-Z]*/g, "");
+  text = text.replace(/\\vspace\{[^}]*\}/g, "");
+
+  text = text.replace(/\\section\{([^}]*)\}/g, "\n--- $1 ---\n");
+  text = text.replace(/\\item\s*/g, "• ");
+
+  text = text.replace(/\\begin\{[^}]*\}(\[[^\]]*\])?(\{[^}]*\})?/g, "");
+  text = text.replace(/\\end\{[^}]*\}/g, "");
+  text = text.replace(/\\(def|newcommand|renewcommand|let|newsavebox|sbox|placelastupdatedtext|AND)\b[^\n]*/g, "");
+
+  text = text.replace(/\\color\{[^}]*\}\{([^}]*)\}/g, "$1");
+  text = text.replace(/\\color\{[^}]*\}/g, "");
+  text = text.replace(/\\raisebox\{[^}]*\}\{[^}]*\}/g, "");
+  text = text.replace(/\\footnotesize/g, "");
+  text = text.replace(/\\fa[A-Za-z]+\*?/g, "");
+
+  text = text.replace(/\\textperiodcentered/g, "·");
+  text = text.replace(/\\&/g, "&");
+  text = text.replace(/\\\\/g, "");
+  text = text.replace(/\\[a-zA-Z]+\{([^}]*)\}/g, "$1");
+  text = text.replace(/\\[a-zA-Z]+/g, "");
+  text = text.replace(/[{}]/g, "");
+  text = text.replace(/\n{3,}/g, "\n\n");
+
+  return text.trim();
+}
+
+async function getLatestResume(): Promise<string> {
+  if (resumeCache && Date.now() - resumeCache.fetchedAt < RESUME_CACHE_MS) {
+    return JSON.stringify({ resume: resumeCache.text });
+  }
+
+  try {
+    const res = await fetch(RESUME_RAW_URL, {
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      return JSON.stringify({ error: `Failed to fetch resume (HTTP ${res.status}).` });
+    }
+    const raw = await res.text();
+    const cleaned = stripLatex(raw);
+    resumeCache = { text: cleaned, fetchedAt: Date.now() };
+    return JSON.stringify({ resume: cleaned });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to fetch resume.";
+    return JSON.stringify({ error: msg });
+  }
+}
+
+function getResumeDownloadLink(): string {
+  return JSON.stringify({
+    url: RESUME_PDF_URL,
+    label: "Download Mustafa's Resume (PDF)",
+  });
+}
+
+// ---------- Tool registries ----------
+
 const syncToolRegistry: Record<string, (args: ToolArgs) => string> = {
   get_profile: getProfile,
   get_experience: getExperience,
@@ -216,6 +294,7 @@ const syncToolRegistry: Record<string, (args: ToolArgs) => string> = {
   get_education: getEducation,
   get_publication: getPublication,
   get_contact: getContact,
+  get_resume_download_link: getResumeDownloadLink,
 };
 
 const asyncToolRegistry: Record<
@@ -223,6 +302,7 @@ const asyncToolRegistry: Record<
   (args: ToolArgs, context?: { conversation?: ConversationMessage[] }) => Promise<string>
 > = {
   send_message: sendMessage,
+  get_latest_resume: getLatestResume,
 };
 
 export type ExecuteToolContext = { conversation?: ConversationMessage[] };

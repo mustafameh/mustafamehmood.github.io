@@ -1,11 +1,7 @@
 import fs from "fs";
 import path from "path";
 import yaml from "js-yaml";
-import {
-  type FunctionDeclaration,
-  type FunctionDeclarationSchema,
-  SchemaType,
-} from "@google/generative-ai";
+import type { ChatCompletionTool } from "openai/resources/chat/completions";
 
 interface ToolParameter {
   name: string;
@@ -59,35 +55,38 @@ export function getFriendlyLabel(toolName: string): string {
   return tool?.friendly_label ?? "Thinking...";
 }
 
-export function buildFunctionDeclarations(): FunctionDeclaration[] {
+export function buildTools(): ChatCompletionTool[] {
   const config = loadConfig();
 
   return config.tools.map((tool) => {
-    if (tool.parameters.length === 0) {
-      return { name: tool.name, description: tool.description };
-    }
-
-    const properties: FunctionDeclarationSchema["properties"] = {};
+    const properties: Record<string, { type: string; description: string }> = {};
     const required: string[] = [];
 
     for (const param of tool.parameters) {
       properties[param.name] = {
-        type: SchemaType.STRING,
+        type: param.type === "string" ? "string" : param.type,
         description: param.description,
-      } as FunctionDeclarationSchema["properties"][string];
+      };
       if (param.required) {
         required.push(param.name);
       }
     }
 
     return {
-      name: tool.name,
-      description: tool.description,
-      parameters: {
-        type: SchemaType.OBJECT,
-        properties,
-        ...(required.length > 0 ? { required } : {}),
-      } as FunctionDeclarationSchema,
+      type: "function" as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        ...(tool.parameters.length > 0
+          ? {
+              parameters: {
+                type: "object" as const,
+                properties,
+                ...(required.length > 0 ? { required } : {}),
+              },
+            }
+          : {}),
+      },
     };
   });
 }

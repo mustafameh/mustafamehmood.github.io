@@ -1,5 +1,6 @@
-import { GoogleGenerativeAI, type Content, type Part } from "@google/generative-ai";
-import { loadConfig, buildFunctionDeclarations, getFriendlyLabel } from "@/lib/chatbot-config";
+import OpenAI from "openai";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { loadConfig, buildTools, getFriendlyLabel } from "@/lib/chatbot-config";
 import { executeTool, isValidTool } from "@/lib/chatbot-tools";
 
 // ---------- Rate limiter (in-memory, per-IP) ----------
@@ -66,7 +67,7 @@ function isGlobalLlmLimitReached(): boolean {
 
 // ---------- Limits ----------
 
-const MAX_BODY_SIZE = 100_000; // 100 KB
+const MAX_BODY_SIZE = 100_000;
 const MAX_HISTORY_MSG_LENGTH = 500;
 
 // ---------- Helpers ----------
@@ -80,10 +81,10 @@ interface ChatMessage {
   content: string;
 }
 
-function toGeminiHistory(messages: ChatMessage[]): Content[] {
+function toOpenAIHistory(messages: ChatMessage[]): ChatCompletionMessageParam[] {
   return messages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
+    role: m.role,
+    content: m.content,
   }));
 }
 
@@ -92,7 +93,6 @@ function toGeminiHistory(messages: ChatMessage[]): Content[] {
 export async function POST(request: Request) {
   const config = loadConfig();
 
-  // --- IP extraction ---
   const forwarded = request.headers.get("x-forwarded-for");
   const ip = forwarded?.split(",")[0]?.trim() ?? "unknown";
 
@@ -110,13 +110,11 @@ export async function POST(request: Request) {
     );
   }
 
-  // --- Body size guard ---
   const contentLength = request.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
     return Response.json({ error: "Request too large." }, { status: 413 });
   }
 
-  // --- Parse & validate body ---
   let rawText: string;
   try {
     rawText = await request.text();
@@ -163,8 +161,7 @@ export async function POST(request: Request) {
         }))
     : [];
 
-  // --- Initialize Gemini ---
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
     return Response.json(
       { error: "Chat is temporarily unavailable." },
@@ -172,50 +169,63 @@ export async function POST(request: Request) {
     );
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: config.model.name,
-    systemInstruction: config.system_prompt,
-    generationConfig: {
-      temperature: config.model.temperature,
-      maxOutputTokens: config.model.max_output_tokens,
-      topP: config.model.top_p,
-    },
-    tools: [{ functionDeclarations: buildFunctionDeclarations() }],
+  const openai = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey,
   });
 
-  const chat = model.startChat({
-    history: toGeminiHistory(safeHistory),
-  });
+  const tools = buildTools();
 
-  // --- Stream SSE ---
+  const messages: ChatCompletionMessageParam[] = [
+    { role: "system", content: config.system_prompt },
+    ...toOpenAIHistory(safeHistory),
+    { role: "user", content: message },
+  ];
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        let response = await chat.sendMessage(message);
         let iterations = 0;
 
-        // ReAct loop: keep resolving function calls
-        while (iterations < config.limits.max_react_iterations) {
-          const candidate = response.response.candidates?.[0];
-          const parts: Part[] = candidate?.content?.parts ?? [];
+        while (iterations <= config.limits.max_react_iterations) {
+          const response = await openai.chat.completions.create({
+            model: config.model.name,
+            messages,
+            tools,
+            temperature: config.model.temperature,
+            max_tokens: config.model.max_output_tokens,
+            top_p: config.model.top_p,
+          });
 
-          const functionCalls = parts.filter((p) => "functionCall" in p);
+          const choice = response.choices[0];
+          if (!choice) break;
 
-          if (functionCalls.length === 0) break;
+          const assistantMessage = choice.message;
+          const toolCalls = assistantMessage.tool_calls;
 
-          const functionResponses: Part[] = [];
+          if (!toolCalls || toolCalls.length === 0) {
+            const finalText = assistantMessage.content ?? "";
+            controller.enqueue(encode({ type: "text", content: finalText }));
+            controller.enqueue(encode({ type: "done" }));
+            break;
+          }
 
-          for (const part of functionCalls) {
-            if (!("functionCall" in part)) continue;
-            const { name, args } = part.functionCall as { name: string; args: Record<string, string> };
+          messages.push(assistantMessage);
 
-            // Send sanitized status to client
+          for (const toolCall of toolCalls) {
+            if (toolCall.type !== "function") continue;
+            const { name } = toolCall.function;
+            let args: Record<string, string> = {};
+            try {
+              args = JSON.parse(toolCall.function.arguments || "{}");
+            } catch {
+              args = {};
+            }
+
             controller.enqueue(
               encode({ type: "status", text: getFriendlyLabel(name) })
             );
 
-            // Execute tool
             let result: string;
             if (name === "send_message" && isMessageRateLimited(ip)) {
               result = '{"success": false, "error": "Message limit reached. Please try again later."}';
@@ -225,32 +235,27 @@ export async function POST(request: Request) {
                   ? [...safeHistory, { role: "user" as const, content: message }]
                   : undefined;
               result =
-                (await executeTool(name, args ?? {}, { conversation })) ?? '{"error": "No data found."}';
+                (await executeTool(name, args, { conversation })) ?? '{"error": "No data found."}';
             } else {
               result = '{"error": "Unknown tool."}';
             }
 
-            functionResponses.push({
-              functionResponse: {
-                name,
-                response: { content: result },
-              },
+            messages.push({
+              role: "tool",
+              tool_call_id: toolCall.id,
+              content: result,
             });
           }
 
-          response = await chat.sendMessage(functionResponses);
           iterations++;
         }
 
-        // Extract final text
-        const finalText =
-          response.response.candidates?.[0]?.content?.parts
-            ?.filter((p): p is Part & { text: string } => "text" in p)
-            .map((p) => p.text)
-            .join("") ?? "";
-
-        controller.enqueue(encode({ type: "text", content: finalText }));
-        controller.enqueue(encode({ type: "done" }));
+        if (iterations > config.limits.max_react_iterations) {
+          controller.enqueue(
+            encode({ type: "text", content: "I took too many steps processing that. Could you try rephrasing?" })
+          );
+          controller.enqueue(encode({ type: "done" }));
+        }
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Something went wrong.";
