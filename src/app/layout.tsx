@@ -14,21 +14,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mustafa Mehmood — Applied AI Scientist",
+  title: "Mustafa Mehmood — Applied Scientist",
   description:
-    "Applied AI Scientist building intelligent systems where precision meets real-world impact. Currently at Thomson Reuters.",
+    "Applied Scientist at Thomson Reuters: agentic system design, LLM evaluation and fine-tuning for high-stakes domains.",
   keywords: [
-    "AI",
-    "Machine Learning",
-    "LLM",
-    "Computer Vision",
     "Applied Scientist",
+    "LLM Agents",
+    "Agentic Systems",
+    "LLM Evaluation",
+    "Fine-Tuning",
+    "Machine Learning",
     "Mustafa Mehmood",
   ],
   openGraph: {
-    title: "Mustafa Mehmood — Applied AI Scientist",
+    title: "Mustafa Mehmood — Applied Scientist",
     description:
-      "Building intelligent systems where precision meets real-world impact.",
+      "Designing, evaluating and fine-tuning agentic systems for high-stakes domains.",
     type: "website",
   },
 };

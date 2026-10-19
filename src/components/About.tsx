@@ -19,19 +19,19 @@ export function About() {
             className="space-y-6"
           >
             <p className="text-text-secondary leading-relaxed">
-              I&apos;m an Applied AI Researcher currently at{" "}
+              I&apos;m an Applied Scientist at{" "}
               <span className="text-foreground font-medium">
                 Thomson Reuters
               </span>
-              , where I build multi-agent systems for legal due diligence in
-              high-stakes M&amp;A transactions. My work sits at the intersection
-              of large language models and domains where accuracy isn&apos;t
-              optional.
+              , where I build agentic systems for M&amp;A due diligence in
+              CoCounsel, own their evaluation methodology, and fine-tune models
+              for legal drafting. My work sits at the intersection of large
+              language models and domains where accuracy isn&apos;t optional.
             </p>
             <p className="text-text-secondary leading-relaxed">
-              Before this, I worked on RLHF training pipelines at Outlier AI,
-              improving tool-use capabilities for models deployed by Google and
-              Meta. I also spent two years in computational neuroscience,
+              Before this, I created expert RLHF data at Outlier AI, writing
+              multi-step tool-use trajectories and preference rankings for
+              frontier AI labs. I also spent two years in computational neuroscience,
               building ML systems for neurological disorder diagnosis — work that
               led to a peer-reviewed{" "}
               <span className="text-foreground font-medium">

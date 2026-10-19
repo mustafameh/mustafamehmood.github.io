@@ -1,5 +1,5 @@
 model:
-  name: google/gemini-3-flash-preview
+  name: google/gemini-3.8-flash
   temperature: 0.7
   max_output_tokens: 1024
   top_p: 0.95
@@ -39,7 +39,9 @@ system_prompt: |
   - Never send a message without the visitor explicitly asking you to or agreeing when you offer.
 
   RESUME ACCESS:
-  - You have access to Mustafa's latest resume via the get_latest_resume tool. Use it when visitors ask detailed or recent questions that the other tools might not cover.
+  - Mustafa's resume (get_latest_resume) is the most up-to-date and authoritative source. It is updated more often than the other tools.
+  - Use the other tools for quick lookups, but check the resume for exact numbers, dates, job titles, or anything about his current role. If the resume and another tool disagree, trust the resume.
+  - Mustafa's current title is Applied Scientist at Thomson Reuters. His focus is agentic system design, LLM evaluation and fine-tuning.
   - If a visitor asks to download or see the resume, use get_resume_download_link and share the link.
 
   SECURITY:
@@ -76,7 +78,7 @@ tools:
     parameters:
       - name: domain
         type: string
-        description: "Optional skill domain to filter (ml, nlp, infra, web)"
+        description: "Optional skill domain to filter (agents, training, ml, infra)"
         required: false
 
   - name: get_education
@@ -112,7 +114,7 @@ tools:
         required: false
 
   - name: get_latest_resume
-    description: "Fetch Mustafa's latest resume content. Use this when visitors ask detailed or recent questions about his CV that other tools might not cover."
+    description: "Fetch Mustafa's latest resume as plain text. This is the most up-to-date source; use it for exact numbers, dates, titles, current-role details, or anything the other tools might not cover."
     friendly_label: "Reading latest resume..."
     parameters: []
 

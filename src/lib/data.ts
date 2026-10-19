@@ -1,9 +1,9 @@
 export const siteConfig = {
   name: "Mustafa Mehmood",
-  role: "Applied AI Scientist",
-  title: "Applied AI Scientist",
+  role: "Applied Scientist",
+  title: "Applied Scientist",
   tagline:
-    "Building intelligent systems for high-stakes domains",
+    "Designing, evaluating and fine-tuning agentic systems for high-stakes domains",
   email: "mustafamehmood8998@gmail.com",
   phone: "+44 7769 504 569",
   linkedin: "https://www.linkedin.com/in/mustafa-meh",
@@ -25,42 +25,45 @@ export interface Experience {
 
 export const experiences: Experience[] = [
   {
-    title: "Applied Scientist & Applied Research Intern",
+    title: "Applied Scientist",
     company: "Thomson Reuters",
     location: "London, UK",
     period: "June 2025 – Present",
     current: true,
-    metric: "0.88",
-    metricLabel: "Pearson Correlation to Expert Grades",
+    metric: "0.78",
+    metricLabel: "Cohen's κ vs. Expert Grades",
     highlights: [
-      "Initially hired as a 4-month intern; extended based on performance to take on full-time Applied Scientist responsibilities.",
-      "Building tool-augmented multi-agent systems for cross-document risk assessment and extraction over high-stakes legal documents, supporting due diligence in M&A transactions.",
-      "Designed an adversarial multi-agent evaluation pipeline that reverse-engineered expert grading criteria from audit sheets, achieving 90%+ failure detection with 0.88 Pearson correlation to expert grades to reducing the evaluation feedback loop from days to hours and enabling rapid iteration on solution development.",
-      "Fine-tuned LLMs for specialized legal use cases including long-form contract drafting, customization, and summarization.",
+      "Developed core agentic workflows for M&A due-diligence review in CoCounsel, TR's AI legal assistant, across hundreds of documents per deal, grounding agents via tools in expert-curated legal sources; achieves 90%+ recall of lawyer-flagged material risks.",
+      "Own evaluation methodology: defined grading criteria with lawyers and designed LLM-as-judge strategies calibrated to expert scores (0.78 Cohen's κ), detecting 87.6% of human-flagged errors; cut eval cycles from days to hours.",
+      "Built an orchestrator agent harness and skill library encoding lawyers' review methodology, plus MCP tools for citation verification, cross-reference resolution and redline comparison.",
+      "Compared context-engineering strategies for long documents (retrieval-then-reason, progressive summarization, sub-agent state passing), yielding up to 4× fewer orchestrator compactions without loss in recall.",
+      "Fine-tuned Qwen-32B for clause customization with QLoRA (SFT, then DPO on lawyer preference rankings), matching GPT-4o in lawyer review at 5×+ lower per-token cost.",
     ],
   },
   {
-    title: "LLM Data Integrity Specialist",
+    title: "LLM Training Data Specialist",
+    type: "Contract",
     company: "Outlier AI",
-    location: "Nottingham, UK",
+    location: "Remote, UK",
     period: "May 2024 – May 2025",
     metric: "20%",
-    metricLabel: "Instruction Adherence Improvement",
+    metricLabel: "Instruction Adherence Gain",
     highlights: [
-      "Improved tool usage and function-calling capabilities of advanced reasoning LLMs through RLHF training pipelines, enabling models to infer, chain, and autonomously execute multi-step complex actions from high-level user intent, powering AI solutions for tech firms including Google and Meta.",
-      "Curated and cleaned training datasets in collaboration with domain experts, achieving a 20% improvement in instruction adherence.",
+      "Wrote multi-step tool-use trajectories that teach models to chain actions from high-level user intent, plus ideal responses and preference rankings on expert computer science and ML tasks for frontier AI labs.",
+      "Reviewed expert submissions and curated datasets, contributing to a 20% gain in model instruction adherence.",
     ],
   },
   {
     title: "Data Scientist Intern",
-    company: "Department of Neuroscience, University of Nottingham Malaysia",
-    location: "Selangor, Malaysia",
+    type: "Part-Time",
+    company: "University of Nottingham",
+    location: "Malaysia",
     period: "June 2021 – Aug 2023",
     metric: "92%",
     metricLabel: "Autism Detection Accuracy",
     highlights: [
-      "Engineered feature extraction pipelines to transform raw EEG and eye-tracking clinical data into structured features: coherence, Hjorth parameters, and spectral power bands for EEG; gaze patterns and fixation analysis for eye-tracking.",
-      "Trained predictive models for neurological and mental health disorder diagnosis, achieving 80% accuracy for Parkinson's and 82% for Schizophrenia from EEG signals, and 92% for Autism from eye-tracking data.",
+      "Built feature-extraction pipelines for clinical EEG and eye-tracking data (spectral power, coherence, gaze fixations).",
+      "Trained diagnostic classifiers reaching 80% accuracy for Parkinson's and 82% for schizophrenia from EEG, and 92% for autism by encoding gaze scanpaths as images for a transfer-learning vision model.",
     ],
   },
 ];
@@ -83,24 +86,30 @@ export const projects: Project[] = [
     problem:
       "Can a fine-tuned LLM authentically emulate a literary character's personality, reasoning style, and speech patterns?",
     approach:
-      "Designed a resource-efficient, transferable character emulation pipeline: fine-tuned a quantized LLaMA model with LoRA for Sherlock Holmes emulation, automating dialogue extraction from public domain texts and deploying on RunPod.",
+      "Designed a reusable character-emulation pipeline that auto-extracts dialogue and generates synthetic training data from public-domain texts, used to fine-tune Llama 3.1 8B with QLoRA as Sherlock Holmes.",
     techStack: [
-      "Hugging Face Transformers",
-      "LoRA",
-      "Flask",
-      "RunPod",
+      "Llama 3.1 8B",
+      "QLoRA",
+      "Unsloth",
+      "Hugging Face trl",
       "OpenRouter",
-      "PostgreSQL",
+      "llama.cpp (GGUF)",
+      "Next.js",
     ],
     metrics: [
-      { value: "72.4%", label: "User Preference over Baseline" },
-      { value: "100%", label: "Usability Score" },
+      { value: "72.4%", label: "User Preference over Base Model" },
+      { value: "QLoRA", label: "Llama 3.1 8B Fine-Tune" },
     ],
     highlights: [
-      "Built a web chat application for Sherlock role-play with text-to-speech, character customisability, and PostgreSQL-based chat management.",
-      "In A/B testing, 72.4% of users favoured the fine-tuned model over the baseline for authenticity.",
+      "In A/B testing, 72.4% of users preferred the fine-tuned model over the base model for character authenticity.",
+      "Added ReAct-style deductive reasoning, served via OpenRouter API or local GGUF to trade off cost and latency.",
+      "Created an interactive story mode where players shape branching mysteries through choices and free-form actions, with streamed structured output for real-time scene generation and auto-summarized context.",
     ],
     links: [
+      {
+        label: "Live Demo",
+        url: "https://agentic-sherlock.vercel.app/",
+      },
       {
         label: "Repository",
         url: "https://github.com/mustafameh/Sherlock-LLM",
@@ -113,20 +122,20 @@ export const projects: Project[] = [
     problem:
       "How can professors instantly create AI teaching assistants from their existing course materials?",
     approach:
-      "Developed an educational platform enabling professors to create AI teaching assistants that auto-generate knowledge bases from course materials, with chat interfaces, FAQ system, and management dashboards.",
+      "Built a platform for professors to spin up AI teaching assistants that answer student queries over knowledge bases auto-generated from course materials, using FAISS-backed RAG with LangChain, Flask and PostgreSQL.",
     techStack: [
       "LangChain",
-      "OAuth",
+      "FAISS",
+      "Flair",
       "Flask",
       "PostgreSQL",
-      "Flair",
+      "OAuth",
       "DigitalOcean",
-      "OpenRouter",
     ],
     metrics: [{ value: "RAG", label: "Retrieval-Augmented Generation" }],
     highlights: [
-      "Built a scalable backend with LangChain and Flair for context-aware responses, deployed on DigitalOcean with Google Drive integration.",
-      "Professors can create AI assistants from their own materials with zero ML knowledge required.",
+      "Professors create AI assistants from their own materials with zero ML knowledge required, with chat interfaces, an FAQ system and management dashboards.",
+      "Deployed on DigitalOcean with Google Drive integration for course material ingestion.",
     ],
     links: [
       {
@@ -148,7 +157,7 @@ export const projects: Project[] = [
       "OpenCV",
       "WebGazer.js",
       "Flask",
-      "sklearn",
+      "scikit-learn",
       "JavaScript",
     ],
     metrics: [
@@ -156,8 +165,8 @@ export const projects: Project[] = [
       { value: "CNN", label: "Custom Architecture + Transfer Learning" },
     ],
     highlights: [
-      "Developed a modular web app combining webcam eye-tracking data collection, preprocessing, and visualization with autism prediction.",
-      "Supports model retraining, custom uploads, adjustable parameters — enhancing clinical accessibility.",
+      "Built a modular Flask web app for webcam-based eye-tracking data collection, visualization, real-time prediction, and model retraining, operationalizing the autism-detection method from the publication.",
+      "Supports custom uploads and adjustable parameters, improving clinical accessibility.",
     ],
     links: [
       {
@@ -192,60 +201,101 @@ export interface SkillNode {
 }
 
 export const skillDomains = [
-  { id: "ml", label: "ML / Deep Learning", color: "#3b82f6" },
-  { id: "nlp", label: "NLP / LLMs", color: "#8b5cf6" },
+  { id: "agents", label: "LLMs & Agents", color: "#8b5cf6" },
+  { id: "training", label: "Training & Evaluation", color: "#3b82f6" },
+  { id: "ml", label: "ML & Data", color: "#f59e0b" },
   { id: "infra", label: "Infrastructure", color: "#10b981" },
-  { id: "web", label: "Web / Visualization", color: "#f59e0b" },
 ];
 
 export const skills: SkillNode[] = [
-  { name: "PyTorch", domain: "ml", size: 3, projects: ["sherlock-ai"] },
-  { name: "TensorFlow", domain: "ml", size: 3, projects: ["deepgaze"] },
-  { name: "scikit-learn", domain: "ml", size: 3, projects: ["deepgaze"] },
-  { name: "Keras", domain: "ml", size: 2, projects: ["deepgaze"] },
-  { name: "OpenCV", domain: "ml", size: 2, projects: ["deepgaze"] },
-
-  {
-    name: "Hugging Face",
-    domain: "nlp",
-    size: 3,
-    projects: ["sherlock-ai"],
-  },
+  { name: "LangGraph", domain: "agents", size: 3 },
   {
     name: "LangChain",
-    domain: "nlp",
+    domain: "agents",
     size: 3,
     projects: ["course-companion"],
   },
-  { name: "LoRA / PEFT", domain: "nlp", size: 3, projects: ["sherlock-ai"] },
-  { name: "spaCy", domain: "nlp", size: 2 },
-  { name: "NLTK", domain: "nlp", size: 2 },
-  { name: "Pydantic AI", domain: "nlp", size: 2 },
-  { name: "Claude SDK", domain: "nlp", size: 2 },
+  { name: "Pydantic AI", domain: "agents", size: 3 },
+  { name: "Claude Agent SDK", domain: "agents", size: 3 },
+  { name: "MCP", domain: "agents", size: 3 },
+  { name: "Tool Calling", domain: "agents", size: 3, projects: ["sherlock-ai"] },
+  {
+    name: "Structured Output",
+    domain: "agents",
+    size: 2,
+    projects: ["sherlock-ai"],
+  },
+  {
+    name: "RAG (BM25, FAISS, Pinecone)",
+    domain: "agents",
+    size: 3,
+    projects: ["course-companion"],
+  },
+  { name: "Context Engineering", domain: "agents", size: 3 },
+  { name: "Agent Harness Design", domain: "agents", size: 3 },
+  { name: "Claude Code", domain: "agents", size: 2 },
 
+  { name: "PyTorch", domain: "training", size: 3, projects: ["sherlock-ai"] },
+  {
+    name: "Hugging Face (Transformers, trl, PEFT)",
+    domain: "training",
+    size: 3,
+    projects: ["sherlock-ai"],
+  },
+  { name: "Unsloth", domain: "training", size: 2, projects: ["sherlock-ai"] },
+  { name: "QLoRA", domain: "training", size: 3, projects: ["sherlock-ai"] },
+  { name: "SFT", domain: "training", size: 3 },
+  { name: "DPO", domain: "training", size: 3 },
+  {
+    name: "Synthetic Data",
+    domain: "training",
+    size: 2,
+    projects: ["sherlock-ai"],
+  },
+  { name: "LLM-as-Judge Evals", domain: "training", size: 3 },
+  { name: "A/B Testing", domain: "training", size: 2, projects: ["sherlock-ai"] },
+  { name: "Langfuse", domain: "training", size: 2 },
+  { name: "Weights & Biases", domain: "training", size: 2 },
+
+  { name: "scikit-learn", domain: "ml", size: 3, projects: ["deepgaze"] },
+  { name: "TensorFlow / Keras", domain: "ml", size: 2, projects: ["deepgaze"] },
+  { name: "spaCy", domain: "ml", size: 2 },
+  {
+    name: "Computer Vision (CNNs)",
+    domain: "ml",
+    size: 2,
+    projects: ["deepgaze"],
+  },
+  { name: "Speech (ASR, Coqui TTS)", domain: "ml", size: 2 },
+  { name: "Spark / Databricks", domain: "ml", size: 2 },
+
+  { name: "AWS (SageMaker, Bedrock)", domain: "infra", size: 3 },
+  { name: "vLLM", domain: "infra", size: 2 },
+  {
+    name: "llama.cpp / Ollama",
+    domain: "infra",
+    size: 2,
+    projects: ["sherlock-ai"],
+  },
+  { name: "OpenRouter", domain: "infra", size: 2, projects: ["sherlock-ai"] },
+  { name: "FastAPI", domain: "infra", size: 3 },
+  {
+    name: "Flask",
+    domain: "infra",
+    size: 2,
+    projects: ["course-companion", "deepgaze"],
+  },
+  { name: "Next.js", domain: "infra", size: 2, projects: ["sherlock-ai"] },
   { name: "Docker", domain: "infra", size: 3 },
-  { name: "AWS", domain: "infra", size: 3 },
+  { name: "Git / GitLab CI", domain: "infra", size: 3 },
   {
     name: "PostgreSQL",
     domain: "infra",
-    size: 3,
-    projects: ["sherlock-ai", "course-companion"],
+    size: 2,
+    projects: ["course-companion"],
   },
-  { name: "Git / CI/CD", domain: "infra", size: 3 },
-  { name: "Spark / Databricks", domain: "infra", size: 2 },
-  { name: "RunPod", domain: "infra", size: 2, projects: ["sherlock-ai"] },
-
-  {
-    name: "Flask",
-    domain: "web",
-    size: 3,
-    projects: ["sherlock-ai", "course-companion", "deepgaze"],
-  },
-  { name: "JavaScript", domain: "web", size: 3, projects: ["deepgaze"] },
-  { name: "D3.js", domain: "web", size: 2 },
-  { name: "REST APIs", domain: "web", size: 3 },
-  { name: "HTML/CSS", domain: "web", size: 2 },
-  { name: "Python", domain: "web", size: 3 },
+  { name: "Python", domain: "infra", size: 3 },
+  { name: "TypeScript", domain: "infra", size: 2 },
 ];
 
 export const education = {

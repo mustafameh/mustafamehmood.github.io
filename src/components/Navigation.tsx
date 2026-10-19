@@ -9,7 +9,7 @@ const links = [
   { href: "#publication", label: "Publication" },
   { href: "#skills", label: "Skills" },
   { href: "#about", label: "About" },
-  { href: "/blog", label: "Blog" },
+  // Blog hidden until there are posts in content/posts.
 ];
 
 export function Navigation() {
